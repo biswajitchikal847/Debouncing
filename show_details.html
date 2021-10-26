@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clouser(movie search engin)</title>
+</head>
+
+<style>
+    * {
+        color: white;
+        background-color: black;
+    }
+
+    input {
+        width: 580px;
+        height: 30px;
+        margin: auto;
+        border-radius: 8px;
+    }
+
+    #movies {
+        height: 400px;
+        width: 600px;
+        border: 1px solid black;
+        overflow: scroll;
+        border-right: none;
+        /* overflow-y: hidden; Hide vertical scrollbar */
+  overflow-x: hidden;
+        display: none;
+        /* display: flex; */
+    }
+
+    #movies > div {
+        display: flex;
+        margin: 5px;
+        background-color: aqua;
+    }
+
+    #movies > div > img{
+        width: 20%;
+        height: 100px;
+    }
+
+    #details {
+        width: 80%;
+        /* height: 300px; */
+        display: grid;
+        grid-template-columns: 30% 60%;
+        grid-gap: 5px;
+        margin: 20px auto;
+        background-color: black;
+        /* border: 2px solid green; */
+        justify-content: center;
+    }
+
+    #details img {
+        margin-top: 5px;
+        width: 100%;
+        height: 260px;
+        /* border-radius: 20px; */
+    }
+
+    #details div {
+        /* border: 2px solid grey; */
+        background-color: white;
+        border-radius: 5px;
+        color: black;
+
+
+    }
+
+    #details p {
+        margin-left: 30px;
+        margin-top: 20px;
+        background-color: white;
+        color: black;
+        font-weight: bold;
+    }
+
+    #maindiv {
+        width: 500px;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        /* text-align: center; */
+    }
+</style>
+
+<body>
+    <div id="maindiv" >
+        <div id="search">
+            <input oninput="debounce(main,1000)" onmouseover="showdiv()" type="text" id="movie" placeholder="Enter movie name" />
+        </div>
+        <div id="movies" onmouseleave="clickbody()"></div>
+    </div>
+    <div id="details"></div>
+</body>
+
+</html>
+
+<script>
+
+    //search Movies => done
+
+    var timerId;
+
+    let movies_div = document.getElementById("movies");
+
+    let movie_input = document.getElementById("movie");
+
+   
+ 
+
+    async function searchMovies(movie_name) {
+        try {
+            let res = await fetch(`https://www.omdbapi.com/?apikey=65714494&s=${movie_name}`);
+            let data = await res.json();
+            // console.log("data:",data);
+            return data;
+        }
+        catch (e) {
+            console.log("e:", e)
+        }
+
+    }
+
+    // searchMovies("inception");
+
+    function appendMovies(movies) {
+
+        if (movies === undefined) {
+            return false;
+        }
+        movies_div.innerHTML = null;
+
+        movies.forEach(function (movie) {
+            let p = document.createElement("p");
+            let image = document.createElement("img");
+            image.src = movie.Poster;
+
+            let inner_div = document.createElement("div");
+
+           
+            p.innerText = "Name - " +movie.Title;
+            p.style.backgroundColor = "aqua";
+            p.style.color ="black";
+            inner_div.append(image,p)
+            movies_div.append(inner_div);
+
+
+            inner_div.addEventListener("click", function () {
+                // p.style.color = "red";
+                console.log("acccs:", movie);
+                var movie_details = document.getElementById("details");
+
+                movie_details.innerText = null;
+
+
+
+                imb(movie.imdbID);
+
+                async function imb(IMDbId) {
+                    let res = await fetch(`http://www.omdbapi.com/?i=${IMDbId}&apikey=65714494`);
+                    let data = await res.json();
+                    console.log("data---", data);
+
+                    let left = document.createElement("div");
+                    let right = document.createElement("div");
+
+                    let img = document.createElement("img");
+
+                    img.src = data.Poster;
+
+                    left.append(img);
+
+                    let name = document.createElement("p");
+
+                    name.innerText = "Title: " + data.Title;
+
+                    name.setAttribute("style", "font-size:20px; font-weight:bold; color: #E64A19")
+
+                    let DVD = document.createElement("p");
+
+                    DVD.innerText = "Year: " + data.DVD;
+
+                    let imdbID = document.createElement("p");
+                    imdbID.setAttribute("style", "color:#FFD600;");
+                    imdbID.innerText = "Rating: " + data.imdbRating + "*";
+
+                    let Language = document.createElement("p");
+
+                    Language.innerText = "Language: " + data.Language;
+
+                    let Runtime = document.createElement("p");
+
+                    Runtime.innerText = "Runtime: " + data.Runtime;
+
+                    right.append(name, DVD, Language, imdbID, Runtime);
+                    movie_details.append(left, right);
+                }
+
+
+
+            });
+        });
+
+    }
+
+    // function showDetails(p,movie){
+    //     let movie_details = document.getElementById("details");
+    //     if(p == movies.Title){
+    //         movie_details.append(movie.Year,movie.Title);
+    //     }
+    // }
+
+    async function main() {
+        let name = document.getElementById("movie").value;
+
+        //get search movies
+
+        if (name.length < 3) {
+           
+            movies_div.style.display ="none";
+            return false;
+        }else{
+
+        movies_div.style.display = "block";
+    }
+
+        let res = await searchMovies(name);
+        let movie_data = res.Search;
+        
+        appendMovies(movie_data);
+        console.log("res---", movie_data);
+    }
+
+
+    function debounce(func, delay) {
+
+        //lets take about A
+        //func = main()
+
+        //ave = setTimeout -  func - main- searchMovie("ave")
+        //aven - clear the previous timeout - setTimeout - func - main- searchMovie("ave")
+
+        if (timerId) {
+            clearTimeout(timerId);
+        }
+
+
+        timerId = setTimeout(function () {
+
+            func();
+
+        }, delay);
+
+    }
+   
+
+    function clickbody(){
+        
+        movies_div.style.display = "none";
+       
+    }
+   function showdiv(){
+    movies_div.style.display = "block";
+   }
+   
+
+</script>
